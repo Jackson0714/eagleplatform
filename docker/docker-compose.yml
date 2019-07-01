@@ -1,0 +1,68 @@
+version: '2'
+services:
+  nginx:
+    image: wlyg/nginx
+    container_name: nginx
+    working_dir: /srv
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    expose:
+      - 80
+      - 443
+    depends_on:
+      - php
+      - mongo
+    links:
+      - php:php
+      - mongo:mongo
+    volumes:
+      - ../h5/:/srv/h5/:rw
+      - ../frontend/:/srv/frontend/:rw
+      - ../backend/:/srv/backend/:rw
+      - ./nginx/conf/:/etc/nginx/conf.d/:rw
+      - ./nginx/ssl/:/etc/nginx/ssl/:rw
+    networks:
+      - backend
+
+  php:
+    image: wlyg/php
+    container_name: php
+    working_dir: /srv
+    restart: always
+    ports:
+      - 9000:9000
+    depends_on:
+      - mongo
+    links:
+      - mongo:mongo
+    volumes:
+      - ../h5/:/srv/h5/:rw
+      - ../frontend/:/srv/frontend/:rw
+      - ../backend/:/srv/backend/:rw
+    networks:
+      - backend
+
+  mongo:
+    image: wlyg/mongo
+    container_name: mongo
+    restart: always
+    ports:
+      - 27017:27017
+    expose:
+      - 27017
+    volumes:
+      - ./mongodb/db:/data/db:rw
+    networks:
+      - backend
+
+  builder:
+    image: wlyg/builder
+    container_name: builder
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
